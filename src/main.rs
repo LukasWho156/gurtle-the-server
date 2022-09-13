@@ -103,13 +103,11 @@ async fn submit_score(collection: web::Data<Collection<Entry>>, submitted: web::
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
 
-    let uri = match env::var("MONGO_URI") {
-        Ok(uri) => uri,
-        Err(_) => String::from("mongodb://localhost:27017"),
-    };
+    let uri = env::var("MONGO_URI").unwrap_or(String::from("mongodb://localhost:27017"));
     let client = set_up_db(uri.as_str()).await.expect("Should be able to connect do Mongo DB");
     let db = client.database("gurtle");
     let collection = db.collection::<Entry>("scores");
+    let port: u16 = env::var("PORT").unwrap_or(String::from("3000")).parse().unwrap_or(3000);
 
     HttpServer::new(move || {
         App::new()
@@ -118,7 +116,7 @@ async fn main() -> std::io::Result<()> {
             .service(get_position)
             .service(submit_score)
     })
-    .bind(("127.0.0.1", 3000))?
+    .bind(("127.0.0.1", port))?
     .run()
     .await
 
