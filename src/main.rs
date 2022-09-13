@@ -116,7 +116,7 @@ async fn main() -> std::io::Result<()> {
             .service(get_position)
             .service(submit_score)
     })
-    .bind(("127.0.0.1", port))?
+    .bind(("0.0.0.0", port))?
     .run()
     .await
 
