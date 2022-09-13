@@ -1,1 +1,1 @@
-web: .target/release/gurtle-server
+web: ./target/release/gurtle-server
