@@ -2,6 +2,7 @@ use std::env;
 use serde::{Serialize, Deserialize};
 use mongodb::{bson::doc, Client, options::{ClientOptions, FindOptions}, Collection};
 use actix_web::{get, post, web, App, HttpResponse, HttpServer};
+use actix_cors::Cors;
 use futures::stream::TryStreamExt;
 use chrono::{Duration, offset::Utc};
 use sha256;
@@ -48,7 +49,7 @@ async fn get_scores(path: web::Path<String>, collection: web::Data<Collection<En
         },
     };
     let options = FindOptions::builder()
-        .sort(doc! {"score": 1})
+        .sort(doc! {"score": -1, "datetime": -1})
         .limit(10)
         .build();
     let mut cursor = collection.into_inner()
@@ -70,10 +71,10 @@ async fn get_position(path: web::Path<(String, i32)>, collection: web::Data<Coll
         _ => now,
     };
     let filter = match duration.as_str() {
-        "alltime" => doc! { "score": {"$gte": score} },
+        "alltime" => doc! { "score": {"$gt": score} },
         _ => doc! {
             "datetime": { "$gte": beginning.to_string() },
-            "score": {"$gte": score}
+            "score": {"$gt": score}
         },
     };
     let position = collection.into_inner().count_documents(filter, None).await.unwrap() + 1;
@@ -110,7 +111,9 @@ async fn main() -> std::io::Result<()> {
     let port: u16 = env::var("PORT").unwrap_or(String::from("3000")).parse().unwrap_or(3000);
 
     HttpServer::new(move || {
+        let cors = Cors::permissive();
         App::new()
+            .wrap(cors)
             .app_data(web::Data::new(collection.clone()))
             .service(get_scores)
             .service(get_position)
