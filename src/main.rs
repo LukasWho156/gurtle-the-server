@@ -106,7 +106,7 @@ async fn main() -> std::io::Result<()> {
 
     let uri = env::var("MONGO_URI").unwrap_or(String::from("mongodb://localhost:27017"));
     let client = set_up_db(uri.as_str()).await.expect("Should be able to connect do Mongo DB");
-    let db = client.database("gurtle");
+    let db = client.database(env::var("DATABASE").unwrap_or(String::from("gurtle")).as_str());
     let collection = db.collection::<Entry>("scores");
     let port: u16 = env::var("PORT").unwrap_or(String::from("3000")).parse().unwrap_or(3000);
 
